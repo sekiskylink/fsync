@@ -160,23 +160,23 @@ class CreateFacility:
             if res:
                 type_id = res[0]["id"]
                 r = db2.query(
-                    "SELECT id FROM healthmodels_healthfacilitybase WHERE uuid = $uuid",
-                    {'uuid': params.uuid})
+                    "SELECT id FROM healthmodels_healthfacilitybase WHERE code = $id",
+                    {'id': params.dhis2id})
                 if not r:
-                    logging.debug("Creating facility with UUID:%s" % params.uuid)
+                    logging.debug("Creating facility with ID:%s" % params.dhis2id)
                     new = db2.query(
                         "INSERT INTO healthmodels_healthfacilitybase "
-                        "(name, code, uuid, type_id, district, active, deleted) VALUES "
-                        "($name, $dhis2id, $uuid, $type, $district, $active, $deleted) RETURNING id",
+                        "(name, code, type_id, district, active, deleted) VALUES "
+                        "($name, $dhis2id, $type, $district, $active, $deleted) RETURNING id",
                         {
                             'name': params.name, 'dhis2id': params.dhis2id,
-                            'uuid': params.uuid, 'type': type_id, 'district': params.district,
+                            'type': type_id, 'district': params.district,
                             'active': True, 'deleted': False
                         })
                     db2.query(
                         "INSERT INTO healthmodels_fredfacilitydetail "
-                        "(uuid_id, h033b) VALUES ($uuid, $is_033b)",
-                        {'uuid': params.uuid, 'is_033b': params.is_033b})
+                        "(uuid_id, h033b) VALUES ($id, $is_033b)",
+                        {'id': params.dhis2id, 'is_033b': params.is_033b})
                     if new:
                         facility_id = new[0]["id"]
                         db2.query(
@@ -201,7 +201,7 @@ class CreateFacility:
                                     "(healthfacilitybase_id, location_id) "
                                     "VALUES ($facility, $loc)",
                                     {'facility': facility_id, 'loc': subcounty_id})
-                                logging.debug("Set Facility Location: UUID:%s Location:%s" % (params.uuid, subcounty_id))
+                                logging.debug("Set Facility Location: ID:%s Location:%s" % (params.dhis2id, subcounty_id))
                             else:
                                 # make district catchment area
                                 db2.query(
@@ -209,12 +209,12 @@ class CreateFacility:
                                     "(healthfacilitybase_id, location_id) "
                                     "VALUES ($facility, $loc)",
                                     {'facility': facility_id, 'loc': district_id})
-                                logging.debug("Set Facility Location: UUID:%s Location:%s" % (params.uuid, district_id))
-                        logging.debug("Facility with UUID:%s sucessfully created." % params.uuid)
-                    return "Created Facility UUID:%s" % params.uuid
+                                logging.debug("Set Facility Location: ID:%s Location:%s" % (params.dhis2id, district_id))
+                        logging.debug("Facility with ID:%s sucessfully created." % params.dhis2id)
+                    return "Created Facility ID:%s" % params.dhis2id
                 else:
                     # facility with passed uuid already exists
-                    logging.debug("updating facility with UUID:%s" % params.uuid)
+                    logging.debug("updating facility with ID:%s" % params.dhis2id)
                     facility_id = r[0]["id"]
                     db2.query(
                         "UPDATE healthmodels_healthfacilitybase SET "
@@ -225,10 +225,10 @@ class CreateFacility:
                             'district': params.district, 'facility': facility_id})
                     db2.query(
                         "UPDATE healthmodels_fredfacilitydetail SET "
-                        "h033b = $is_033b WHERE uuid_id = $uuid",
-                        {'is_033b': 't' if params.is_033b else 'f', 'uuid': params.uuid}
+                        "h033b = $is_033b WHERE uuid_id = $id",
+                        {'is_033b': 't' if params.is_033b else 'f', 'id': params.dhis2id}
                     )
-                    logging.debug("Set h033b for facility with UUID:%s to %s" % (params.uuid, params.is_033b))
+                    logging.debug("Set h033b for facility with ID:%s to %s" % (params.dhis2id, params.is_033b))
                     d = db2.query(
                         "SELECT id FROM locations_location WHERE lower(name) = $name "
                         "AND level = 2", {'name': params.district.lower()})
@@ -242,8 +242,8 @@ class CreateFacility:
                             # we have a sub county in mTrac
                             subcounty_id = res2[0]["id"]
                             logging.debug(
-                                "Sub county:%s set for facility with UUID:%s" %
-                                (params.subcounty, params.uuid))
+                                "Sub county:%s set for facility with ID:%s" %
+                                (params.subcounty, params.dhis2id))
                             res3 = db2.query(
                                 "SELECT id FROM healthmodels_healthfacilitybase_catchment_areas "
                                 " WHERE healthfacilitybase_id = $facility AND location_id = $loc",
@@ -254,7 +254,7 @@ class CreateFacility:
                                     "(healthfacilitybase_id, location_id) "
                                     "VALUES ($facility, $loc)",
                                     {'facility': facility_id, 'loc': subcounty_id})
-                                logging.debug("Set Facility Location: UUID:%s Location:%s" % (params.uuid, subcounty_id))
+                                logging.debug("Set Facility Location: ID:%s Location:%s" % (params.dhis2id, subcounty_id))
                         else:
                             # make district catchment area
                             res3 = db2.query(
@@ -267,9 +267,9 @@ class CreateFacility:
                                     "(healthfacilitybase_id, location_id) "
                                     "VALUES ($facility, $loc)",
                                     {'facility': facility_id, 'loc': district_id})
-                                logging.debug("Set Facility Location: UUID:%s Location:%s" % (params.uuid, district_id))
-                        logging.debug("Facility with UUID:%s sucessfully updated." % params.uuid)
-                    return "Updated Facility UUID:%s" % params.uuid
+                                logging.debug("Set Facility Location: ID:%s Location:%s" % (params.dhis2id, district_id))
+                        logging.debug("Facility with ID:%s sucessfully updated." % params.dhis2id)
+                    return "Updated Facility ID:%s" % params.dhis2id
             else:
                 return "Unsupported type:%s" % params.ftype
 
