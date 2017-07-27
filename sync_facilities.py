@@ -65,9 +65,10 @@ def get_facility_details(facilityJson):
     parent = re.sub(
         'Subcounty.*$|Sub\ County.*$', "", facilityJson["parent"]["name"],
         flags=re.IGNORECASE).strip()
-    district_url = "%s/%s.json?fields=id,name,parent" % (config["orgunits_url"], facilityJson["parent"]["id"])
+    district_url = "%s/%s.json?fields=id,name,parent[id,name]" % (config["orgunits_url"], facilityJson["parent"]["id"])
     print district_url
     districtJson = get_url(district_url)
+    print districtJson
     # district = json.loads(districtJson)["parent"]["name"].replace('District', '').strip()
     district = re.sub(
         'District.*$', "",
