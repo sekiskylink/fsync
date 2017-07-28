@@ -179,23 +179,25 @@ class CreateFacility:
                         {'id': params.dhis2id, 'is_033b': params.is_033b})
                     if new:
                         facility_id = new[0]["id"]
+                        print "FACILITY-ID:", facility_id
                         db2.query(
                             "INSERT INTO healthmodels_healthfacility"
                             " (healthfacilitybase_ptr_id) VALUES($id)", {'id': facility_id}
                         )
                         d = db2.query(
                             "SELECT id FROM locations_location WHERE lower(name) = $district "
-                            "AND level = 2", {'district': params.district})
+                            "AND level = 2", {'district': params.district.lower()})
                         if d:
                             district_id = d[0]["id"]
                             res2 = db2.query(
                                 "SELECT id FROM locations_location "
                                 "WHERE name ilike $name AND level = 4"
                                 " AND get_district(id) = $district",
-                                {'name': '%%%s%%' % params.subcounty, 'district': district_id})
+                                {'name': '%%%s%%' % params.subcounty, 'district': params.district})
                             if res2:
                                 # we have a sub county in mTrac
                                 subcounty_id = res2[0]["id"]
+                                print "WE HAVE SUBCOUNTY:", subcounty_id
                                 db2.query(
                                     "INSERT INTO healthmodels_healthfacilitybase_catchment_areas "
                                     "(healthfacilitybase_id, location_id) "
@@ -204,6 +206,7 @@ class CreateFacility:
                                 logging.debug("Set Facility Location: ID:%s Location:%s" % (params.dhis2id, subcounty_id))
                             else:
                                 # make district catchment area
+                                print "USING DISTRICT FOR LOCATION:", district_id
                                 db2.query(
                                     "INSERT INTO healthmodels_healthfacilitybase_catchment_areas "
                                     "(healthfacilitybase_id, location_id) "
