@@ -101,6 +101,7 @@ if SYNC_ALL:
     except Exception as e:
         print str(e), response
         orgunits = []
+    facility_ids = []
 
     for orgunit in orgunits:
         #  print "processing for Facility:%s" % orgunit["id"]
@@ -111,12 +112,15 @@ if SYNC_ALL:
                 "INSERT INTO facilities(name, dhis2id) VALUES (%s, %s)",
                 (orgunit["name"], orgunit["id"]))
             print "NEW ==>", orgunit["id"]
+            url_list.append("%s/%s.json?%s" % (config["orgunits_url"], orgunit["id"].strip(), query_string))
+            facility_ids.append(orgunit["id"])
         else:  # we have the entry
             cur.execute(
                 "UPDATE facilities SET name = %s WHERE dhis2id = %s",
                 (orgunit["name"], orgunit["id"]))
         conn.commit()
-    sys.exit()
+
+    facility_id_list = ','.join(facility_ids)
 
 if FORCE_SYNC:  # this is only used when you want to sync the contents alread id sync db
     logging.debug("START FULL SYNC for DB")
