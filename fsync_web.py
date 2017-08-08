@@ -152,7 +152,7 @@ class CreateFacility:
         if not r[0]:
             return "Unauthorized access"
 
-        with db2.transaction():
+        with db2.transaction() as t:
             res = db2.query(
                 "SELECT id FROM healthmodels_healthfacilitytypebase "
                 "WHERE lower(name) = $name ",
@@ -173,6 +173,7 @@ class CreateFacility:
                             'type': type_id, 'district': params.district,
                             'active': True, 'deleted': False
                         })
+                    t.commit()
                     db2.query(
                         "INSERT INTO healthmodels_fredfacilitydetail "
                         "(uuid_id, h033b) VALUES ($id, $is_033b)",
@@ -180,10 +181,10 @@ class CreateFacility:
                     if new:
                         facility_id = new[0]["id"]
                         print "FACILITY-ID:", facility_id
-                        db2.query(
-                            "INSERT INTO healthmodels_healthfacility"
-                            " (healthfacilitybase_ptr_id) VALUES($id)", {'id': facility_id}
-                        )
+                        # db2.query(
+                        #     "INSERT INTO healthmodels_healthfacility"
+                        #     " (healthfacilitybase_ptr_id) VALUES($id)", {'id': facility_id}
+                        # )
                         d = db2.query(
                             "SELECT id FROM locations_location WHERE lower(name) = $district "
                             "AND level = 2", {'district': params.district.lower()})
