@@ -143,7 +143,7 @@ class CreateFacility:
     def GET(self):
         params = web.input(
             name="", ftype="", district="",
-            uuid="", is_033b='f', dhis2id="", subcounty="",
+            uuid="", is_033b='f', dhis2id="", subcounty="", owner="",
             username="", password=""
         )
         username = params.username
@@ -166,12 +166,12 @@ class CreateFacility:
                     logging.debug("Creating facility with ID:%s" % params.dhis2id)
                     new = db2.query(
                         "INSERT INTO healthmodels_healthfacilitybase "
-                        "(name, code, type_id, district, active, deleted) VALUES "
-                        "($name, $dhis2id, $type, $district, $active, $deleted) RETURNING id",
+                        "(name, code, type_id, district, active, deleted, owner) VALUES "
+                        "($name, $dhis2id, $type, $district, $active, $deleted, $owner) RETURNING id",
                         {
                             'name': params.name, 'dhis2id': params.dhis2id,
                             'type': type_id, 'district': params.district,
-                            'active': True, 'deleted': False
+                            'active': True, 'deleted': False, 'owner': params.owner
                         })
                     t.commit()
                     db2.query(
@@ -222,11 +222,12 @@ class CreateFacility:
                     facility_id = r[0]["id"]
                     db2.query(
                         "UPDATE healthmodels_healthfacilitybase SET "
-                        "name = $name, code = $dhis2id, type_id = $type, district = $district "
+                        "name = $name, code = $dhis2id, type_id = $type, "
+                        "district = $district, owner = $owner"
                         " WHERE id = $facility ",
                         {
                             'name': params.name, 'dhis2id': params.dhis2id, 'type': type_id,
-                            'district': params.district, 'facility': facility_id})
+                            'district': params.district, 'owner': params.owner, 'facility': facility_id})
                     db2.query(
                         "UPDATE healthmodels_fredfacilitydetail SET "
                         "h033b = $is_033b WHERE uuid_id = $id",
