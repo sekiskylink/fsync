@@ -101,6 +101,8 @@ for dhis2id in dhis2_ids:
 
     for orgunit in orgunits:
         subcounty, district, level, is_033b, owner = get_facility_details(orgunit)
+        if not level:
+            continue
         sync_params = {
             'username': config["sync_user"], 'password': config["sync_passwd"],
             'name': orgunit["name"],
