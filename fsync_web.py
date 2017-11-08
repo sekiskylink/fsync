@@ -228,11 +228,21 @@ class CreateFacility:
                         {
                             'name': params.name, 'dhis2id': params.dhis2id, 'type': type_id,
                             'district': params.district, 'owner': params.owner, 'facility': facility_id})
-                    db2.query(
-                        "UPDATE healthmodels_fredfacilitydetail SET "
-                        "h033b = $is_033b WHERE uuid_id = $id",
-                        {'is_033b': 't' if params.is_033b else 'f', 'id': params.dhis2id}
-                    )
+                    hmis33b_detail = db2.query(
+                        "SELECT id FROM healthmodels_fredfacilitydetail WHERE uuid_id = $id",
+                        {'id': params.dhis2id})
+                    if hmis33b_detail:
+                        db2.query(
+                            "UPDATE healthmodels_fredfacilitydetail SET "
+                            "h033b = $is_033b WHERE uuid_id = $id",
+                            {'is_033b': 't' if params.is_033b else 'f', 'id': params.dhis2id}
+                        )
+                    else:  # if record doesn't exist
+                        db2.query(
+                            "INSERT INTO healthmodels_fredfacilitydetail "
+                            "(uuid_id, h033b) VALUES ($id, $is_033b)",
+                            {'id': params.dhis2id, 'is_033b': params.is_033b})
+
                     logging.debug("Set h033b for facility with ID:%s to %s" % (params.dhis2id, params.is_033b))
                     d = db2.query(
                         "SELECT id FROM locations_location WHERE lower(name) = $name "
