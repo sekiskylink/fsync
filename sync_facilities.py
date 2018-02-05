@@ -80,12 +80,15 @@ def get_facility_details(facilityJson):
         if k in orgunitGroupsIds:
             level = v
 
+    has_no_datasets = False
     dataSets = facilityJson["dataSets"]
+    if not dataSets:
+        has_no_datasets = True
     dataSetsIds = ["%s" % k["id"] for k in dataSets]
     if getattr(config, "hmis_033b_id", "V1kJRs8CtW4") in dataSetsIds:
         is_033b = True
     # we return tuple (Subcounty, District, Level, is033B)
-    return parent, district, level, is_033b
+    return has_no_datasets, parent, district, level, is_033b
 
 if SYNC_ALL:
     SYNC_URL = "%s.json?level=5&fields=id,name&paging=false"
@@ -162,7 +165,9 @@ else:
         logging.error("E02: Sync Service failed")
         # just keep quiet for now
 for orgunit in orgunits:
-    subcounty, district, level, is_033b = get_facility_details(orgunit)
+    hasNoDatasets, subcounty, district, level, is_033b = get_facility_details(orgunit)
+    if hasNoDatasets:
+        continue
     cur.execute(
         "SELECT id, name, dhis2id, district, subcounty, level, is_033b "
         "FROM facilities WHERE dhis2id = %s", [orgunit["id"]])
